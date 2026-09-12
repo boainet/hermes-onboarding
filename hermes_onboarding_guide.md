@@ -265,7 +265,10 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 
 ### 长跑纪律（预埋，防止新手踩"会话跑久了幻觉"的坑）
 - 关键状态落盘（文件/数据库/memory），不靠对话上下文记忆。
-- **会话重置命令**：`/new` 或 `/reset` = 彻底开新会话（gateway 重启会恢复旧上下文，不是真新）；`/clear` = 只清当前上下文。
+- **会话重置命令**：`/new` 和 `/reset` **是同一个动作**（都是彻底开新会话，gateway 里同一个处理器），`/clear` 只清当前上下文、`/undo` 撤销上一步。
+  - ⚠️ **默认都会弹确认**：`/new`、`/reset`、`/clear`、`/undo` 是"破坏性会话命令"，默认会问一次"确认/总是批准/取消"（`approvals.destructive_slash_confirm` 默认 true，防止误清历史）。回 `always` 可永久免确认，或设 `approvals.destructive_slash_confirm: false`。
+  - `approvals.mode`（smart/off/manual）管的是**工具调用**审批；`destructive_slash_confirm` 管的是**这些 slash 命令**确认——两者独立，别混。
+  - 备注：gateway 重启会从磁盘恢复旧上下文，`/new` 才是真新会话。
 - 会话明显变重时用 `/new` 开新会话。
 - 长任务拆独立会话。
 
