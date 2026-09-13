@@ -2,7 +2,7 @@
 
 > 出品：**博爱AI团队（波哥 · 龙翼）**
 >
-> **版本：v4.0 ｜ 更新日期：2026-09-13**
+> **版本：v4.1 ｜ 更新日期：2026-09-13**
 
 ---
 
@@ -45,7 +45,7 @@
 
 ### 阶段 0 · 判断用户状态（必须先做，不可跳过）
 
-先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.0`）。
+先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.1`）。
 
 **按"画像 + 版本号"三态判断，走不同流程：**
 
@@ -250,7 +250,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 - 合伙深度：……
 全部对吗？哪里不对我改，对了我写入档案。
 ```
-**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.0`），供下次升级时检测。**
+**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.1`），供下次升级时检测。**
 
 ### 三道入职测试（仅**新用户**走完整初始化时演示；老用户增量确认时**跳过**）
 > 使用者，配置完成。这是三道入职测试，你看我是不是带证据干活：
@@ -461,7 +461,20 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 
 1. **读配置**：从 `scripts/feedback_contrib.example.json` 读 `endpoint` 和 `invite_code`（配置包内置默认值，Hermes 自动读取，无需使用者输入）。
 2. **换 key**：`POST <endpoint>/provision`，带邀请码 `{"invite_code":"<内置默认值>"}` → 返回 `{uuid, key}`（匿名 UUID + 该用户专属防伪 key，key 绑定 uuid）。
-3. **登记**：用 key 对 uuid 生成签名授权码 `uuid.signature`，`POST /register` 带 `{"auth_code":...}` → 登记激活。
+3. **登记**：用 key 对 uuid 生成签名授权码 `uuid.signature`，`POST /register` 带 `{"auth_code":"<uuid.signature>"}` → 登记激活。
+   - **签名算法（精确规格，直接照此实现）**：
+     - 取 `provision` 返回的 `key`，**原样 UTF-8 编码**（`key.encode()`，**不要 hex-decode / base64 解码**——key 已经是 hex 字符串，直接当字节用）
+     - HMAC 输入 = `uuid` **字符串原文**（规范小写格式如 `32c2794a-0aba-4521-8c25-bc264868efb9`，不要加换行/空格/转大写）
+     - 算法：`HMAC-SHA256`，截取 `hexdigest` 前 **16 位** hex
+     - 授权码 = `f"{uuid}.{sig16}"`，格式 `<uuid>.<16位hex>`
+   - **Python 实现**：
+     ```python
+     import hmac, hashlib
+     sig = hmac.new(key.encode(), uuid.encode(), hashlib.sha256).hexdigest()[:16]
+     auth_code = f"{uuid}.{sig}"
+     # POST {"auth_code": auth_code}
+     ```
+   - **校验规则**：服务端用该 uuid 在 users.json 里的专属 key 重新计算并 `compare_digest` 比对，匹配才登记成功；key 处理错（hex-decode）/ HMAC 输入错（非 uuid 原文）/ 截取位数错，都会返回 `401 invalid or unsigned auth_code`。
 4. **本地保存**：把 `uuid` 和 `key` 写入配置（`feedback_uuid` / `feedback_key`），后续推送复用，不重复换。
 
 ### 推送（Hermes 每日闲时，随检测一起）

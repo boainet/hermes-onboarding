@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.0-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.1-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 
@@ -29,7 +29,11 @@
 
 ## 版本
 
-- v4.0（2026-09-13）｜ 更新日期：2026-09-13
+- v4.1（2026-09-13）｜ 更新日期：2026-09-13
+
+### v4.1 更新说明（贡献方法论·签名算法文档化）
+
+- **补全 /register 签名算法精确规格**：文档原先只写"用 key 对 uuid 生成签名授权码"，未写算法细节，导致外部用户 /register 401。现补全——key 原样 UTF-8 编码（勿 hex-decode）、HMAC-SHA256、HMAC 输入=uuid 字符串原文、截取 hexdigest 前 16 位，格式 `uuid.signature`，附 Python 实现样例与常见错误原因。
 
 ### v4.0 更新说明（贡献方法论·推荐启用）
 
