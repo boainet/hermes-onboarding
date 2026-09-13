@@ -1,5 +1,9 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
+[![版本](https://img.shields.io/badge/版本-v3.4-2ea44f)]()
+[![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
+[![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
+
 一键初始化 Hermes：新用户免配置免学习直接上手，老用户自动增量、零副作用。
 
 ---
