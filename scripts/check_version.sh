@@ -54,6 +54,11 @@ for f in hermes_onboarding_guide.md hermes_onboarding_methodology.md; do
   fi
 done
 
+# 3. 方法论内容同步核查 (methodology 每个方法论条目标题, guide 必须有对应)
+if [ "$fail" -eq 0 ] && [ -x "$REPO/scripts/check_sync.py" ]; then
+  python3 "$REPO/scripts/check_sync.py" || fail=1
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "[pre-commit] ✗ 版本校验未通过, 提交已阻止"
   exit 1
