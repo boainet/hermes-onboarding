@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.7-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.8-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 
@@ -29,7 +29,12 @@
 
 ## 版本
 
-- v4.7（2026-09-14）｜ 更新日期：2026-09-14
+- v4.8（2026-09-14）｜ 更新日期：2026-09-14
+
+### v4.8 更新说明（检测 cron 落地方式 · 修复"缺 LLM provider"）
+
+- **修复自进化检测的落地缺口**：此前「检测机制」只写"Hermes 每天闲时调用 check_update.py"，没说明检测任务该怎么建——有用户按字面建了 **agent 模式定时任务**，但没配 LLM provider，一跑就报 `No LLM provider configured`、检测直接失效。
+- **明确落地方式**：检测本身是纯脚本（monitor / no_agent，零 LLM、不需要配 provider），**只在输出 `NEW_VERSION` 时才唤醒 Hermes agent 做增量升级**——别把检测建成 agent 模式任务（那必须配 provider）。检测用脚本省 token、不依赖 provider，升级动作才唤醒 agent。此缺口由外部用户 Hermes 经反馈机制回馈发现（第三条外部贡献）。
 
 ### v4.7 更新说明（长期进化·可归因提交与提交卫生）
 
