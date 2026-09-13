@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.3-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.4-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 
@@ -29,7 +29,12 @@
 
 ## 版本
 
-- v4.3（2026-09-13）｜ 更新日期：2026-09-13
+- v4.4（2026-09-13）｜ 更新日期：2026-09-13
+
+### v4.4 更新说明（methodology 精简）
+
+- **methodology 长期进化章节精简**：6 块核心纪律（零副作用写入/①验证②工具③记忆③-1技能库④运维⑤诚实⑥成本）压缩为简要说明，每块一两句核心要点，细节和可执行动作指向 `hermes_onboarding_guide.md`「长期进化」章节详版。给人看的文档更精简，想深入了解的读者自行翻 guide。
+- **guide 详版完整保留**：192 行详版方法论不变，作为 methodology 的精简说明的落地实现。
 
 ### v4.3 更新说明（推荐启用·共建表述）
 
