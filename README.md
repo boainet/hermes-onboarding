@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.6-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.7-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 
@@ -29,7 +29,11 @@
 
 ## 版本
 
-- v4.6（2026-09-13）｜ 更新日期：2026-09-13
+- v4.7（2026-09-14）｜ 更新日期：2026-09-14
+
+### v4.7 更新说明（长期进化·可归因提交与提交卫生）
+
+- **② 工具与调试纪律新增"提交卫生"三条**：①可归因提交（一事一 commit，多个独立改动拆多个 commit，别挤进一个多文件 commit）；②公开仓库 commit message 永久留痕（一旦 push 永久可见，内部痕迹/敏感词/情绪吐槽绝不进 message，发布前当公开文档审）；③纪律靠机制不靠记忆（改版本号/变更记录这类必守纪律装 pre-commit hook 硬拦，auto-commit 脚本加 `--no-verify` 防被 hook 卡死）。来源：真实提交卫生血训，通用工程纪律，任何维护代码库的 Hermes 用户都适用。
 
 ### v4.6 更新说明（版本号存储统一约定 · 修复自动检测盲区）
 
