@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.5-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.6-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 
@@ -29,7 +29,12 @@
 
 ## 版本
 
-- v4.5（2026-09-13）｜ 更新日期：2026-09-13
+- v4.6（2026-09-13）｜ 更新日期：2026-09-13
+
+### v4.6 更新说明（版本号存储统一约定 · 修复自动检测盲区）
+
+- **修复自动检测盲区**：此前 guide 教 Hermes 把 `onboarding_version` 写进 memory / user profile，但检测脚本 `check_update.py` 读的是 `~/.hermes/onboarding_version` **独立文件**（不读 memory）——两处不一致导致开了自动更新的用户**永远检测不到新版**（本地版本读到空 → 误判已最新）。
+- **统一真源**：`onboarding_version` 唯一真源 = `~/.hermes/onboarding_version` 文件；升级/初始化写版本号时务必同步落盘该文件，memory 字段仅用于引导判断。此盲区由外部用户 Hermes 经 feedback 通道实测踩坑回馈发现（第二条外部贡献）。
 
 ### v4.5 更新说明（指令级安全红线 · 首个外部贡献纳入）
 
