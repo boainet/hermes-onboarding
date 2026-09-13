@@ -20,13 +20,10 @@ import sys
 import urllib.request
 
 DEFAULT_REPO = "boainet/hermes-onboarding"
-# 本地版本号读取位置: 优先从配置文件, 否则环境变量, 否则默认
-DEFAULT_LOCAL_VERSION = "v4.4"
 
 
 def get_local_version():
-    """读取本地已应用的配置包版本号"""
-    # 尝试从标准位置读 onboarding_version
+    """读取本地已应用的配置包版本号 (从 onboarding_version 文件, 无则 None)"""
     candidates = [
         os.path.expanduser("~/.hermes/onboarding_version"),
         os.path.expanduser("~/.config/hermes/onboarding_version"),
@@ -38,7 +35,7 @@ def get_local_version():
                 v = f.read().strip()
                 if v:
                     return v
-    return DEFAULT_LOCAL_VERSION
+    return None
 
 
 def get_latest_version(repo):
@@ -108,6 +105,11 @@ def main():
 
     if latest is None:
         print("CHECK_FAILED")  # 网络/仓库不可达, 不打扰用户, Hermes 静默重试
+        return 0
+
+    # 无本地版本号(新装还没写 onboarding_version): 视为已是最新, 不误报升级
+    if local is None:
+        print("UP_TO_DATE")
         return 0
 
     lv, lv2 = version_tuple(local), version_tuple(latest)
