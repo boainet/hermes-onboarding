@@ -22,7 +22,8 @@ for f in "${FILES[@]}"; do
     continue
   fi
   # 提取版本号 (兼容 badge 链接 与 版本: 两种格式, 取最新/最大版本号 — README 可能含历史版本 changelog)
-  ver=$(grep -oE 'v3\.[0-9]+' "$p" | sort -t. -k2 -n | tail -1)
+  # 用 sort -V (GNU 版本号排序) 取最大。不能用 sort -t. -k1 -k2 -n: 版本号含字母v, -n 数字排序把 v 当0 会拿错号(曾升 v4 取到 v3.9)
+  ver=$(grep -oE 'v[0-9]+\.[0-9]+' "$p" | sort -V | tail -1)
   VER["$f"]="$ver"
   echo "[pre-commit] $f -> $ver"
 done

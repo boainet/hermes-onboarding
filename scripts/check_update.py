@@ -21,7 +21,7 @@ import urllib.request
 
 DEFAULT_REPO = "boainet/hermes-onboarding"
 # 本地版本号读取位置: 优先从配置文件, 否则环境变量, 否则默认
-DEFAULT_LOCAL_VERSION = "v3.9"
+DEFAULT_LOCAL_VERSION = "v4.0"
 
 
 def get_local_version():
@@ -76,7 +76,7 @@ def get_latest_version(repo):
         with urllib.request.urlopen(req, timeout=15) as r:
             text = r.read().decode()
             import re
-            m = re.search(r"v3\.\d+", text)
+            m = re.search(r"v\d+\.\d+", text)
             if m:
                 return m.group(0).lstrip("v")
     except Exception:
