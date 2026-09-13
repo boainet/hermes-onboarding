@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# 版本号一致性 + 内容变更必升版本校验 (pre-commit hook)
+# 规则:
+#   1. 三文件版本号必须一致 (README / guide / methodology)
+#   2. 若 guide 或 methodology 的内容较上一次 commit 有变更, 但版本号未变 -> 拦截
+# 用法: 复制到 .git/hooks/pre-commit (本地生效)
+
+set -u
+
+REPO="$(git rev-parse --show-toplevel)"
+FILES=("README.md" "hermes_onboarding_guide.md" "hermes_onboarding_methodology.md")
+
+fail=0
+
+# 1. 三文件版本号一致性
+declare -A VER
+for f in "${FILES[@]}"; do
+  p="$REPO/$f"
+  if [ ! -f "$p" ]; then
+    echo "[pre-commit] 缺失: $f"
+    fail=1
+    continue
+  fi
+  # 提取版本号 (兼容 badge 链接 与 版本: 两种格式)
+  ver=$(grep -oE 'v3\.[0-9]+' "$p" | sort -u | head -1)
+  VER["$f"]="$ver"
+  echo "[pre-commit] $f -> $ver"
+done
+
+base=""
+for f in "${FILES[@]}"; do
+  v="${VER[$f]:-}"
+  if [ -z "$v" ]; then
+    echo "[pre-commit] ✗ $f 无版本号"
+    fail=1
+    continue
+  fi
+  if [ -z "$base" ]; then
+    base="$v"
+  elif [ "$v" != "$base" ]; then
+    echo "[pre-commit] ✗ 版本不一致: $f = $v, 应为 $base"
+    fail=1
+  fi
+done
+
+# 2. 内容变更必升版本 (guide/methodology)
+for f in hermes_onboarding_guide.md hermes_onboarding_methodology.md; do
+  old_ver=$(git show "HEAD:$f" 2>/dev/null | grep -oE 'v3\.[0-9]+' | sort -u | head -1 || echo "")
+  new_ver="${VER[$f]:-}"
+  changed=$(git diff --name-only HEAD 2>/dev/null | grep -qx "$f" && echo yes || echo no)
+  if [ "$changed" = "yes" ] && [ -n "$old_ver" ] && [ "$new_ver" = "$old_ver" ]; then
+    echo "[pre-commit] ✗ $f 内容变更但版本号未升 ($old_ver -> $new_ver), 请先升版本号"
+    fail=1
+  fi
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo "[pre-commit] ✗ 版本校验未通过, 提交已阻止"
+  exit 1
+fi
+echo "[pre-commit] ✓ 版本校验通过"
+exit 0
