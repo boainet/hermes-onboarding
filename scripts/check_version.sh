@@ -21,8 +21,8 @@ for f in "${FILES[@]}"; do
     fail=1
     continue
   fi
-  # 提取版本号 (兼容 badge 链接 与 版本: 两种格式)
-  ver=$(grep -oE 'v3\.[0-9]+' "$p" | sort -u | head -1)
+  # 提取版本号 (兼容 badge 链接 与 版本: 两种格式, 取最新/最大版本号 — README 可能含历史版本 changelog)
+  ver=$(grep -oE 'v3\.[0-9]+' "$p" | sort -t. -k2 -n | tail -1)
   VER["$f"]="$ver"
   echo "[pre-commit] $f -> $ver"
 done
