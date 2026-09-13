@@ -21,7 +21,7 @@ import urllib.request
 
 DEFAULT_REPO = "boainet/hermes-onboarding"
 # 本地版本号读取位置: 优先从配置文件, 否则环境变量, 否则默认
-DEFAULT_LOCAL_VERSION = "v3.8"
+DEFAULT_LOCAL_VERSION = "v3.9"
 
 
 def get_local_version():

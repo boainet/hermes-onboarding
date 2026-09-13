@@ -1,0 +1,5 @@
+{
+  "_comment": "贡献方法论接收端配置。endpoint 为匿名推送入口, invite_code 为启用时的邀请码(轻门槛, 可轮换, 不依赖它保密——安全靠每用户key+人工审核)。启用贡献方法论时 Hermes 自动读取本文件。",
+  "endpoint": "https://feedback.boai.net",
+  "invite_code": "hb_c81dde73cfa97e7c779cf237"
+}

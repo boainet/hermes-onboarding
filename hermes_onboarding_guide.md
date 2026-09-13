@@ -2,7 +2,7 @@
 
 > 出品：**博爱AI团队（波哥 · 龙翼）**
 >
-> **版本：v3.8 ｜ 更新日期：2026-09-13**
+> **版本：v3.9 ｜ 更新日期：2026-09-13**
 
 ---
 
@@ -45,7 +45,7 @@
 
 ### 阶段 0 · 判断用户状态（必须先做，不可跳过）
 
-先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v3.8`）。
+先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v3.9`）。
 
 **按"画像 + 版本号"三态判断，走不同流程：**
 
@@ -250,7 +250,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 - 合伙深度：……
 全部对吗？哪里不对我改，对了我写入档案。
 ```
-**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v3.8`），供下次升级时检测。**
+**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v3.9`），供下次升级时检测。**
 
 ### 三道入职测试（仅**新用户**走完整初始化时演示；老用户增量确认时**跳过**）
 > 使用者，配置完成。这是三道入职测试，你看我是不是带证据干活：
@@ -453,16 +453,17 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 
 使用者说"开启贡献方法论" / "参与自进化" → Hermes 自动执行，全程零手动：
 
-1. **换 key**：`POST https://feedback.boai.net/provision`，带邀请码 `{"invite_code":"<配置包内置>"}` → 返回 `{uuid, key}`（匿名 UUID + 该用户专属防伪 key，key 绑定 uuid）。
-2. **登记**：用 key 对 uuid 生成签名授权码 `uuid.signature`，`POST /register` 带 `{"auth_code":...}` → 登记激活。
-3. **本地保存**：把 `uuid` 和 `key` 写入配置（`feedback_uuid` / `feedback_key`），后续推送复用，不重复换。
+1. **读配置**：从 `scripts/feedback_contrib.example.json` 读 `endpoint` 和 `invite_code`（配置包内置默认值，Hermes 自动读取，无需使用者输入）。
+2. **换 key**：`POST <endpoint>/provision`，带邀请码 `{"invite_code":"<内置默认值>"}` → 返回 `{uuid, key}`（匿名 UUID + 该用户专属防伪 key，key 绑定 uuid）。
+3. **登记**：用 key 对 uuid 生成签名授权码 `uuid.signature`，`POST /register` 带 `{"auth_code":...}` → 登记激活。
+4. **本地保存**：把 `uuid` 和 `key` 写入配置（`feedback_uuid` / `feedback_key`），后续推送复用，不重复换。
 
 ### 推送（Hermes 每日闲时，随检测一起）
 
 - **收集**：在使用中，Hermes 识别"可贡献"的重要方法论（新方法论、重要老方法论的优化），标记待推送。
 - **打包**：标准格式 `{title, principle, scenario, source}`，**title+principle 必填**。
 - **去隐私（硬要求）**：推送前自动剥离——**服务器IP、本地路径（/home /root /opt C:/Users）、邮箱、交易持仓/价格/盈亏、手机号、身份证**，全部打码为 `[IP] [PATH] [EMAIL] [TRADE] [PHONE] [IDCARD]`。
-- **推送**：`POST https://feedback.boai.net/feedback`，`Authorization: Bearer <uuid.signature>`，body 为标准格式。
+- **推送**：`POST <endpoint>/feedback`（endpoint 从 `scripts/feedback_contrib.example.json` 读），`Authorization: Bearer <uuid.signature>`，body 为标准格式。
 - **失败静默**：推送失败（网络/401）不打扰使用者，下次闲时重试。
 
 ### 关闭
