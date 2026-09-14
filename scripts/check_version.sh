@@ -60,6 +60,16 @@ if [ "$fail" -eq 0 ] && [ -x "$REPO/scripts/check_sync.py" ]; then
   python3 "$REPO/scripts/check_sync.py" || fail=1
 fi
 
+# 4. 三方一致性核查 (文档声明 <-> 脚本行为 <-> 服务端 cron 配置, 评价建议 2 落点)
+#    服务端 jobs.json 路径可经 CHECK_JOBS 环境变量传入; 不传则只做文档<->脚本双向校验
+if [ "$fail" -eq 0 ] && [ -x "$REPO/scripts/check_consistency.py" ]; then
+  jobs_arg=""
+  if [ -n "${CHECK_JOBS:-}" ]; then
+    jobs_arg="--jobs $CHECK_JOBS"
+  fi
+  python3 $REPO/scripts/check_consistency.py $jobs_arg || fail=1
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "[pre-commit] ✗ 版本校验未通过, 提交已阻止"
   exit 1
