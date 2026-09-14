@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.10-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.11-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 
@@ -29,7 +29,13 @@
 
 ## 版本
 
-- v4.10（2026-09-14）｜ 更新日期：2026-09-14
+- v4.11（2026-09-14）｜ 更新日期：2026-09-14
+
+### v4.11 更新说明（定时唤醒原则 · cron 与 monitor 的选择）
+
+- **新增「定时唤醒原则」**（④-1 执行机制自动化 子规则）：**纯定时提醒用 cron**（到点发消息即可，不需要 Hermes 干活）；**需要唤醒 Hermes 执行的用 monitor**（monitor 检测到变化/条件满足才唤醒 agent 处理，人工零干预，任务完成汇报）。
+- **判断标准**：任务只是"到点提醒一下"→ cron；任务需要 Hermes 判断/执行/处理 → monitor。**别把要干活的定时任务建成纯提醒**（断链：触发了但没人执行），**也别把纯提醒建成 monitor**（白烧 token 唤醒 agent 却没活干）。
+- 这是"执行机制自动化"的落地决策规则：选对 cron/monitor，才让机制真正自动化且不费 token。
 
 ### v4.10 更新说明（核心工作原则 · 执行机制自动化不靠记忆）
 
