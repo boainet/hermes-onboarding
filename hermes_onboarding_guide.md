@@ -2,7 +2,7 @@
 
 > 出品：**博爱AI团队（波哥 · 龙翼）**
 >
-> **版本：v4.15 ｜ 更新日期：2026-09-14**
+> **版本：v4.16 ｜ 更新日期：2026-09-14**
 
 ---
 
@@ -45,7 +45,7 @@
 
 ### 阶段 0 · 判断用户状态（必须先做，不可跳过）
 
-先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.15`）。
+先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.16`）。
 
 **按"画像 + 版本号"三态判断，走不同流程：**
 
@@ -250,7 +250,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 - 合伙深度：……
 全部对吗？哪里不对我改，对了我写入档案。
 ```
-**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.15`），供下次升级时检测。**
+**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.16`），供下次升级时检测。**
 
 ### 三道入职测试（仅**新用户**走完整初始化时演示；老用户增量确认时**跳过**）
 > 使用者，配置完成。这是三道入职测试，你看我是不是带证据干活：
@@ -444,10 +444,23 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 
 ### 检测机制（Hermes 每天闲时执行一次，静默模式与确认模式共用）
 
-> **版本号存储唯一约定**：检测脚本 `check_update.py` 只读 `~/.hermes/onboarding_version` **文件**（或 `~/.config/hermes/onboarding_version`）。**任何升级/初始化写入版本号时，务必同时落盘该文件**——不要只写进 memory / user profile。memory 里的 `onboarding_version` 仅用于判断\"该走哪种引导\"，检测脚本**不读 memory**。两处只写 memory、不落文件，脚本读到空会误判\"无本地版本\"→ 永远检测不到新版。落盘格式：纯文本版本号（如 `v4.15`），无前后空格。
+> **版本号存储唯一约定**：检测脚本 `check_update.py` 只读 `~/.hermes/onboarding_version` **文件**（或 `~/.config/hermes/onboarding_version`）。**任何升级/初始化写入版本号时，务必同时落盘该文件**——不要只写进 memory / user profile。memory 里的 `onboarding_version` 仅用于判断\"该走哪种引导\"，检测脚本**不读 memory**。两处只写 memory、不落文件，脚本读到空会误判\"无本地版本\"→ 永远检测不到新版。落盘格式：纯文本版本号（如 `v4.16`），无前后空格。
 
 1. **检测**：Hermes 在每天空闲时段（避开使用高峰，默认夜间），调用 `scripts/check_update.py`（或参考其逻辑）查 GitHub 最新版本，与 `~/.hermes/onboarding_version` 文件里的本地版本号比对。
-   - **检测怎么落地（关键，别再踩"缺 provider"的坑）**：检测本身是**纯脚本、零 LLM**——`check_update.py` 只比对版本号、不调用大模型。所以这个每日检测**应该建成"脚本模式"的定时任务**（monitor / no_agent，不需要配 LLM provider）：脚本跑 `check_update.py`，只在输出 `NEW_VERSION` 时才唤醒 Hermes agent 做增量升级。**不要**建成"agent 模式"的定时任务——agent 模式必须给该任务配好 LLM provider，否则会报 `No LLM provider configured`。一句话：**检测用脚本（省 token、不依赖 provider），升级动作才唤醒 agent。**
+   - **检测怎么落地（关键，别再踩"缺 provider"的坑）**：检测本身是**纯脚本、零 LLM**——`check_update.py` 只比对版本号、不调用大模型。所以这个每日检测**应该建成"脚本模式"的定时任务**：脚本跑 `check_update.py`，只在输出 `NEW_VERSION` 时才唤醒 Hermes agent 做增量升级。**不要**建成"agent 模式"的定时任务——agent 模式必须给该任务配好 LLM provider，否则会报 `No LLM provider configured`。一句话：**检测用脚本（省 token、不依赖 provider），升级动作才唤醒 agent。**
+     - **⚠️ monitor 与 no_agent 互斥（实测血训，别断链）**：脚本模式的检测任务用 **monitor 机制** 唤醒 agent（见下"唤醒全自动"）。此时**切勿设 `no_agent=true`**——`no_agent` 通道在 monitor 唤醒逻辑**之前**短路，会把检测结果**只送达不升级**（检测到 NEW_VERSION 也没 agent 执行，白检测、断链）。所以正确配置是：`no_agent` 保持 **false**，靠 `monitor_script` 检测脚本输出变化来唤醒 agent。**区分**：`no_agent=true` 适合"纯通知类"任务（到点发个消息就完事，不需要 agent 处理）；凡是需要 agent 做增量升级的检测任务，必须走 monitor + `no_agent=false`。
+     - **检测任务仍需配 provider（实名，别写占位名）**：虽然检测脚本本身零 LLM，但 monitor 模式唤醒的是 Hermes **agent**，agent 执行升级要用 LLM——所以这个任务**仍要给 `provider` 字段配实名的 custom provider**（如 `volcano`）。**写占位名解析不到 API key**，agent 唤醒后照样报 `No LLM provider configured`。
+     - **标准 cron 配置模板（JSON，可直接复制）**：
+       ```json
+       {
+         "script": "/path/to/check_update.py",
+         "monitor_script": "/path/to/check_update.py",
+         "provider": "volcano",
+         "no_agent": false,
+         "schedule": "0 3 * * *"
+       }
+       ```
+       三处必须写对：① `script` + `monitor_script` 都指向检测脚本（一个跑、一个检测输出变化）；② `provider` 写**实名** custom provider，不写占位名；③ `no_agent` 必须是 **false**（true 会绕过 monitor 断链）。
    - **唤醒全自动、零手动（使用者不用复制任何东西）**：建好上面这个"脚本模式"定时任务后，**唤醒 Hermes 做升级这一步由 Hermes 自己的 monitor 机制自动完成**——monitor 检测到脚本输出变成 `NEW_VERSION`，就自动唤醒 Hermes agent、把检测结果交给它，agent 直接进增量合并。**使用者不需要复制通知/消息给 Hermes**，也不需要手动触发升级；提前说一句"开启自动更新"之后，全程自动：检测 → 唤醒 → 升级 → 告知使用者。**千万不要**建成"脚本输出结果给使用者、使用者再手动转发给 Hermes"的纯通知方式——那会让升级断链（检测到新版也没人执行，白检测）。
    - 输出 `UP_TO_DATE` → 静默，不打扰使用者。
    - 输出 `NEW_VERSION:<版本号>` → 按模式进入升级流程。

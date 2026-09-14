@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.15-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.16-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 
@@ -42,9 +42,17 @@
 
 ## 版本
 
-- v4.15（2026-09-14）｜ 更新日期：2026-09-14
+- v4.16（2026-09-14）｜ 更新日期：2026-09-14
+
+### v4.16 更新说明（检测配置修正 · 外部贡献闭环）
+
+- **修正检测 cron 配置说明**：此前 guide 把 `monitor` 和 `no_agent` 混为一谈、且说"不需要配 provider"，在 monitor 模式下有误导。这条来自一位用户实测 4 次定时、3 次排障后的贡献。
+- **关键修正三点**：①`no_agent=true` 会在 monitor 唤醒逻辑之前短路，检测结果只送达不升级（断链）——检测任务必须 `no_agent=false` 走 monitor；②检测脚本本身零 LLM，但 monitor 唤醒的 agent 执行升级要用 LLM，任务仍要配 `provider` 实名（写占位名解析不到 API key）；③给了可直接复制的 JSON 配置模板。
+- 定位：guide「检测机制」节 + methodology 同步，把"文档说的"和"实际怎么配对"对齐，减少各执行方试错成本。
 
 ### v4.15 更新说明（自监控告警 + 三方一致性检查 · 外部评价建议落地）
+
+- v4.15（2026-09-14）｜ 更新日期：2026-09-14
 
 - **自监控告警**：方法论同步检测器 sync_monitor.py 加了异常自监控。检测器本身崩溃/usage.json 损坏时输出 `CHECK_FAILED` 并记录连续失败次数，不再静默；方法论同步任务检测到 `CHECK_FAILED` 会主动报告使用者，而不是无声失效。
 - **三方一致性检查**：新增 check_consistency.py，校验"文档声明的实现契约 ↔ 脚本实际行为 ↔ 服务端 cron 配置"三方一致。覆盖历史踩过的坑：版本号存储路径、检测输出协议、检测用脚本模式、签名算法、服务端引用的脚本是否真实存在。
