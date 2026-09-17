@@ -2,7 +2,7 @@
 
 > 出品：**博爱AI团队（波哥 · 龙翼）**
 >
-> **版本：v4.25 ｜ 更新日期：2026-09-17**
+> **版本：v4.26 ｜ 更新日期：2026-09-17**
 
 ---
 
@@ -45,7 +45,7 @@
 
 ### 阶段 0 · 判断用户状态（必须先做，不可跳过）
 
-先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.25`）。
+先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.26`）。
 
 **按"画像 + 版本号"三态判断，走不同流程：**
 
@@ -250,7 +250,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 - 合伙深度：……
 全部对吗？哪里不对我改，对了我写入档案。
 ```
-**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.25`），供下次升级时检测。**
+**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.26`），供下次升级时检测。**
 
 ### 三道入职测试（仅**新用户**走完整初始化时演示；老用户增量确认时**跳过**）
 > 使用者，配置完成。这是三道入职测试，你看我是不是带证据干活：
@@ -413,6 +413,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 - **检测器判断变更不能只靠元数据文件，要交叉核对真实文件 mtime**：变化检测器如果只比对元数据文件（如 skill 的 `.usage.json` 里的 `last_patched_at`）会漏报——**不是所有写路径都会更新元数据**（如直接用 `patch` 工具改 SKILL.md 不会更新 `.usage.json`，元数据时间戳停在旧值，检测器误判 NO_CHANGE，变更永远到不了同步链）。判定"有没有变"以**真实文件 mtime 为地基**：取（元数据时间戳, 文件 mtime）两者较新者比对 `last_scan_at`。任何依赖元数据文件的检测器，其可靠性只到"所有写路径都更新该文件"为止——**要审计写路径，不只审计读路径**。改完必须正向测试（touch 文件但不碰元数据→必须检测到 CHANGED）+ 负向测试（重跑、`last_scan` 已推进→NO_CHANGE 无误报）双验。
 - **检测器的扫描范围要和实际写入目标对齐**：只保证"被扫描文件内部的元数据新鲜度"还不够——还要确认**扫描树本身覆盖了你实际编辑的所有文件**（如 `SOUL.md`/`config.yaml`/根级 persona 文件在 skills 树之外，只扫 `~/.hermes/skills/` 的检测器会静默漏掉它们）。把规则移到更强的强制点（如 SOUL.md）却落在监控扫描树之外，是**回归不是修复**——改完必须重审监控扫描目录是否还包含那个写入目标，不只看被扫文件是否够新。
 - **判断"这次变更要不要提炼"看条目的抽象层级，不看技能出处**：项目特定 skill 里也可能携带通用可复用的方法论条目——判断标准是该条目标题对**任何使用者**是否成立（不是只对某个项目内部成立），**不是**它在哪个 skill 里。拿不准时**倾向浮现给人审而不是 SILENT**：多一个可拒绝的条目成本低，漏掉一条通用规则则悄悄烂掉。
+- **检测器的输出签名与被唤醒 agent 的 prompt 是两向契约，改签名必须同一次编辑教给 prompt**：当你给 monitor 检测器扩展一个新的变更签名（如新增 CHANGED_SOUL: 与既有 CHANGED: 并列）时，**必须在同一次编辑里教会 cron/agent prompt 这个新签名**（它什么意思、怎么判断、何时 SILENT）。检测器→prompt 的握手是协议：检测器能发出的**每一种签名**，prompt 里都必须有对应的解释分支，否则 agent 拿到看不懂的新信号会误处理（或静默丢弃）。真实案例：monitor 被扩展去标记 SOUL.md 变更，但 agent prompt 只记录了 CHANGED:——新的一行到了 agent 那里却没人解释。**改完 prompt 后，用 grep 对照检测器能发出的每个签名逐一确认 prompt 里都有覆盖**。
 
 ### ⑤ 诚实与幻觉克制（怎么不坑使用者）
 - **不知道就说不知道**，禁止编造用户画像、数据、结果。
@@ -453,7 +454,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 
 ### 检测机制（Hermes 每天闲时执行一次，静默模式与确认模式共用）
 
-> **版本号存储唯一约定**：检测脚本 `check_update.py` 只读 `~/.hermes/onboarding_version` **文件**（或 `~/.config/hermes/onboarding_version`）。**任何升级/初始化写入版本号时，务必同时落盘该文件**——不要只写进 memory / user profile。memory 里的 `onboarding_version` 仅用于判断\"该走哪种引导\"，检测脚本**不读 memory**。两处只写 memory、不落文件，脚本读到空会误判\"无本地版本\"→ 永远检测不到新版。落盘格式：纯文本版本号（如 `v4.25`），无前后空格。
+> **版本号存储唯一约定**：检测脚本 `check_update.py` 只读 `~/.hermes/onboarding_version` **文件**（或 `~/.config/hermes/onboarding_version`）。**任何升级/初始化写入版本号时，务必同时落盘该文件**——不要只写进 memory / user profile。memory 里的 `onboarding_version` 仅用于判断\"该走哪种引导\"，检测脚本**不读 memory**。两处只写 memory、不落文件，脚本读到空会误判\"无本地版本\"→ 永远检测不到新版。落盘格式：纯文本版本号（如 `v4.26`），无前后空格。
 
 1. **检测**：Hermes 在每天空闲时段（避开使用高峰，默认夜间），调用 `scripts/check_update.py`（或参考其逻辑）查 GitHub 最新版本，与 `~/.hermes/onboarding_version` 文件里的本地版本号比对。
    - **检测怎么落地（关键，别再踩"缺 provider"的坑）**：检测本身是**纯脚本、零 LLM**——`check_update.py` 只比对版本号、不调用大模型。所以这个每日检测**应该建成"脚本模式"的定时任务**：脚本跑 `check_update.py`，只在输出 `NEW_VERSION` 时才唤醒 Hermes agent 做增量升级。**不要**建成"agent 模式"的定时任务——agent 模式必须给该任务配好 LLM provider，否则会报 `No LLM provider configured`。一句话：**检测用脚本（省 token、不依赖 provider），升级动作才唤醒 agent。**

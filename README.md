@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.25-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.26-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 [![English](https://img.shields.io/badge/lang-English-5865F2)](README_EN.md)
@@ -42,6 +42,12 @@
 - **版本机制**：统一版本自适应，后续升级喂新版即增量
 
 ## 版本
+
+- v4.26（2026-09-17）｜ 更新日期：2026-09-17
+
+### v4.26 更新说明（检测器输出签名与 agent prompt 是两向契约，改签名同一次编辑教给 prompt）
+
+- **检测器的输出签名与被唤醒 agent 的 prompt 是两向契约**：当你给 monitor 检测器扩展一个新的变更签名（如新增 CHANGED_SOUL: 与既有 CHANGED: 并列）时，必须在同一次编辑里教会 cron/agent prompt 这个新签名（它什么意思、怎么判断、何时 SILENT）。检测器→prompt 的握手是协议：检测器能发出的每一种签名，prompt 里都必须有对应的解释分支，否则 agent 拿到看不懂的新信号会误处理（或静默丢弃）。改完 prompt 后，用 grep 对照检测器能发出的每个签名逐一确认 prompt 里都有覆盖。来源：cron-job-reliability 技能实战血训（2026-09-17），进 guide「④-1 执行机制自动化」+ methodology，两处同步。
 
 - v4.25（2026-09-17）｜ 更新日期：2026-09-17
 
