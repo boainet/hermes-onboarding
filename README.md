@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.26-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.27-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 [![English](https://img.shields.io/badge/lang-English-5865F2)](README_EN.md)
@@ -42,6 +42,12 @@
 - **版本机制**：统一版本自适应，后续升级喂新版即增量
 
 ## 版本
+
+- v4.27（2026-09-17）｜ 更新日期：2026-09-17
+
+### v4.27 更新说明（外部反馈处理新增「讲事实但消除歧义」标准）
+
+- **外部反馈处理补强「讲事实但消除歧义」**：当外部指控针对的是表述歧义而非事实造假（如"半年真实磨合"被误读成"仓库刚建却称半年"）——保留事实、优化表述，不删事实、不硬挺、不夸大：首次出现处补括号澄清事实含义，其余重复处弱化时间卖点、聚焦实战来源（"半年真实磨合"→"长期实战磨合"）。来源：hermes-onboarding-package 技能实战血训，进 guide「外部反馈处理」+ methodology「外部反馈处理」，两处同步。
 
 - v4.26（2026-09-17）｜ 更新日期：2026-09-17
 
