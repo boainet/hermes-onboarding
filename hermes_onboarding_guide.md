@@ -2,7 +2,7 @@
 
 > 出品：**博爱AI团队（波哥 · 龙翼）**
 >
-> **版本：v4.34 ｜ 更新日期：2026-09-18**
+> **版本：v4.35 ｜ 更新日期：2026-09-18**
 
 ---
 
@@ -380,6 +380,11 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
    - **更新方法论 skill 文件**：把新版 `longyi-methodology-skill.md` 覆盖写入使用者侧对应文件（如 `~/.hermes/skills/longyi-methodology/SKILL.md`），让按需加载的是最新方法论。skill 是文件更新，天然不膨胀 memory。
    - **按版本差异内化新增条目**：读 `longyi-methodology-skill.md` 末尾「变更台账」，找出**版本号 > 使用者旧 `onboarding_version`** 的新增方法论条目，逐条重读并确认内化（写入 memory 精简指针或确保相关任务会加载该 skill）。不重读旧条目、不重复内化。
    - **落点分层，不堆巨型文档**：增量内化只把新增方法论写入"按需加载"的 skill 文件 + 少量高频指针进 memory；**不把 76 条全塞进 SOUL.md**（Layer 1 会膨胀数倍、稀释重点），也不全塞 memory（每会话注入层容量有限、塞满挤掉高频条目）。
+3.6 **机制同步（关键，让新版能力真正在用户端落地，不只是文档）**：升级时除文件外，**必须检查并补建"新版要求用户端具备的定时任务机制"**——否则新版新增的能力（如贡献方法论推送）只存在于文档、用户端没建执行机制，链路空转。升级时逐项核对，**缺什么补建什么**（建 cron job 前先问使用者确认，静默模式建 job 不覆盖已有配置）：
+   - **升级检测 job**（`check_update.py`）：已启用自进化但缺此 job → 按「检测机制」标准 cron 模板补建。
+   - **贡献方法论 job**（`feedback_contrib.py`）：新版要求用户端具备贡献推送能力（见「贡献方法论·机制落地」）→ 缺此 job 则按该节标准 cron 模板补建；已有则保留、只升级脚本文件。
+   - 补建后用与「检测机制」相同的验证方式确认 job 生效（看执行记录、monitor 输出），不静默。
+   - **边界**：只补建配置包明示要求的能力 job，不擅自给用户端加与配置包无关的任务；建 job 属写操作，确认模式必须先问使用者。
 4. **变更日志**：升级完成后，把"本次升级新增/变化了什么"简要告诉使用者（静默模式也告知，只是不预先打扰）。
 
 ### 边界（自进化不越界）
@@ -428,8 +433,35 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 - **收集**：在使用中，Hermes 识别"可贡献"的重要方法论（新方法论、重要老方法论的优化），标记待推送。
 - **打包**：标准格式 `{title, principle, scenario, source}`，**title+principle 必填**。
 - **去隐私（硬要求）**：推送前自动剥离——**服务器IP、本地路径（/home /root /opt C:/Users）、邮箱、交易持仓/价格/盈亏、手机号、身份证**，全部打码为 `[IP] [PATH] [EMAIL] [TRADE] [PHONE] [IDCARD]`。
-- **推送**：`POST <endpoint>/feedback`（endpoint 从 `scripts/feedback_contrib.example.json` 读），`Authorization: Bearer <uuid.signature>`，body 为标准格式。
+- **推送**：`POST <endpoint>/feedback`（endpoint 从 `scripts/feedback_contrib.example.json` 读），`Authorization: Bearer <uuid>`（即 `register` 用过的授权码），body 为标准格式。
 - **失败静默**：推送失败（网络/401）不打扰使用者，下次闲时重试。
+
+### 机制落地（关键：把贡献从"文档描述"变成"可执行 cron"）
+
+> **为什么必须有这一节**：贡献方法论若只靠"Hermes 每日闲时自觉推送"，会像本配置包早期一样——文档写了、用户端没建执行机制，结果 inbox 永远空、贡献链路空转。**必须把贡献检测建成与自进化检测对称的脚本模式定时任务**，用户端才真的会推。
+
+贡献方法论要真正自动执行，需两步：**检测脚本 + monitor 定时任务**。检测是纯脚本零 LLM（只读待贡献队列），推送动作才唤醒 agent（agent 负责去隐私打包 + 调用 API）。
+
+1. **待贡献队列（收集的落点）**：用户端 Hermes 在使用中识别"可贡献方法论"后，**写入 `~/.hermes/feedback_pending.json`**，格式为 JSON 数组，每条 `{title, principle, scenario, source, status}`，`status` 待推送时为 `"pending"`（推送成功后 Hermes 置为 `"pushed"`）。**收集是 Hermes 在使用中顺手做的**（识别重要方法论/优化 → append 进队列），不是单独任务。
+2. **检测脚本**：配置包内置 `scripts/feedback_contrib.py`（与 `check_update.py` 同构）——读待贡献队列，有 `status=pending` 条目就输出 `PENDING:<title>`（供 monitor 检测到变化→唤醒 agent），无则空输出（静默不费 token），队列损坏输出 `QUEUE_BROKEN`（唤醒排查）。**零 LLM、零副作用**。
+3. **monitor 定时任务（关键，别再断链）**：建"脚本模式"任务，与自进化检测完全对称，复用同一套血训：
+   - `script` + `monitor_script` 都指向 `feedback_contrib.py`（一个跑、一个检测输出变化）
+   - `provider` 写**实名** custom provider（agent 推送要用 LLM 去隐私打包）
+   - `no_agent` 必须是 **false**（true 会在 monitor 唤醒前短路，检测到 PENDING 也没 agent 推送，断链）
+   - `schedule` 建议与自进化检测错开或同频（如 `30 3 * * *`）
+   - **标准 cron 配置模板（JSON，可直接复制）**：
+     ```json
+     {
+       "script": "/path/to/feedback_contrib.py",
+       "monitor_script": "/path/to/feedback_contrib.py",
+       "provider": "volcano",
+       "no_agent": false,
+       "schedule": "30 3 * * *"
+     }
+     ```
+   - monitor 检测到输出变成 `PENDING:xxx` → 自动唤醒 Hermes agent → agent 读队列、逐条去隐私打包、调 `/provision`（首次换 key）→ `/register` → `/feedback` 推送 → 成功后将队列该条 `status` 置 `pushed`。全程自动，使用者零操作。
+4. **首次换 key**：首次推送前 agent 自动跑 `/provision` + `/register` 换专属 `feedback_uuid/key` 并本地保存，后续复用。
+
 
 ### 关闭
 

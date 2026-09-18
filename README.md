@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.33-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.35-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 [![English](https://img.shields.io/badge/lang-English-5865F2)](README_EN.md)
@@ -43,7 +43,14 @@
 
 ## 版本
 
-- v4.34（2026-09-18）｜ 更新日期：2026-09-18
+- v4.35（2026-09-18）｜ 更新日期：2026-09-18
+
+### v4.35 更新说明（贡献方法论落地为可执行机制：用户端不再"文档有机制无"）
+
+- **新增 `scripts/feedback_contrib.py`**：用户端贡献检测脚本（与 `check_update.py` 同构，零 LLM 零副作用）——读待贡献队列 `~/.hermes/feedback_pending.json`，有 `pending` 条目输出 `PENDING:<title>`（monitor 唤醒 agent 推送），空输出静默，队列损坏输出 `QUEUE_BROKEN`。
+- **guide「贡献方法论」补「机制落地」**：给标准 cron 模板（script+monitor_script 同指 feedback_contrib.py、provider 实名、no_agent=false），把贡献从"靠用户端 Hermes 自觉"变成"可执行定时任务"。
+- **guide「自进化」补「3.6 机制同步」**：升级时检查并补建新版要求的能力 job（升级检测 + 贡献方法论），缺什么补什么——让用户端升级到新版后自动获得贡献推送能力，不再链路空转。
+- **修复贡献链路根因**：此前贡献方法论只有文档（guide「贡献方法论」章）没有执行机制，用户端 inbox 永远空、贡献链路空转。本次补齐检测脚本 + cron 模板 + 机制同步，用户端升级后自动补强。
 
 ### v4.34 更新说明（方法论落点重构：从 guide 抽离为独立 skill，增量内化闭环）
 
