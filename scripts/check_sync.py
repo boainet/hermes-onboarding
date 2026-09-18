@@ -53,6 +53,13 @@ def extract_method_titles(path):
         m = re.match(r"^- \*\*(.+?)\*\*", line.strip())
         if m:
             titles.append(m.group(1))
+        # 大条目内嵌子句: 段落中 "**子标题**：" 且前面是句子边界(。；！？或行首)
+        # 如 "④-1 执行机制自动化" 内的 "**自监控告警**：..." —— 这些是方法论子句,
+        # 抽离为 skill 独立条目时必须有对应, 否则会像"自监控告警"一样漏检。
+        for sm in re.finditer(r"(?:^|[。；！？])\s*\*\*([^*]{2,40}?)\*\*[：:]", line):
+            sub = sm.group(1).strip()
+            if sub and not sub.startswith("④") and not sub.startswith("①") and not sub.startswith("②") and not sub.startswith("③"):
+                titles.append(sub)
     return titles
 
 def keyword_of(title):
@@ -67,6 +74,39 @@ def keyword_of(title):
     core = re.split(r"[，,、：:]", core)[0]
     return core
 
+# 高频虚词/连接词: 标题措辞变体(如 methodology 说"高频 tick"、skill 说"的调度要用高频 tick")
+# 时, 机械子串匹配会误报。归一化去掉这些词后再比, 容忍措辞差异、仍能抓真缺。
+STOPWORDS = ["的", "了", "要", "该", "和", "与", "看", "别", "应", "须", "都", "得", "才", "也",
+             "能", "会", "可", "就", "给", "把", "被", "于", "之", "其", "此", "且", "并"]
+
+def normalized(s):
+    """去虚词归一化(仅对 >=4 字的稳定片段, 避免过度删导致误匹配)"""
+    return re.sub(r"[%s]" % "".join(STOPWORDS), "", s)
+
+def matches(title, guide_text):
+    """判断 methodology 标题是否在 skill 文本中有对应: 先精确子串, 再归一化子串(容忍措辞变体)。
+    归一化要求标题去虚词后剩余 >=4 字(太短不归一, 防误报)。"""
+    kw = keyword_of(title)
+    if len(kw) < 3:
+        return True  # 太短不强制
+    if kw in guide_text:
+        return True
+    nk = normalized(kw)
+    ng = normalized(guide_text)
+    if len(nk) >= 4 and nk in ng:
+        return True
+    # 已知措辞变体白名单: methodology 子句标题 -> skill 里真实存在的对应关键词。
+    # 用于 methodology 是大条目内嵌子句、skill 是独立详细条目且措辞略异的情况
+    # (如 methodology"分层判据" ↔ skill"分层存的判据")。机械匹配难覆盖的变体在这登记。
+    ALIASES = {
+        "分层判据": "分层存的判据",
+        "monitor 类 job 高频 tick": "高频 tick",
+        "判断\"变更要不要提炼\"看条目抽象层级不看技能出处": "抽象层级",
+    }
+    if title in ALIASES and ALIASES[title] in guide_text:
+        return True
+    return False
+
 def main():
     titles = extract_method_titles(METHOD)
     if not titles:
@@ -75,10 +115,7 @@ def main():
     guide_text = SKILL.read_text(encoding="utf-8")
     missing = []
     for t in titles:
-        kw = keyword_of(t)
-        if len(kw) < 3:  # 太短的标题不强制(如"复现""数据"会误报)
-            continue
-        if kw not in guide_text:
+        if not matches(t, guide_text):
             missing.append(t)
 
     if missing:
