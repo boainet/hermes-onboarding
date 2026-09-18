@@ -6,3 +6,7 @@ __pycache__/
 # 系统/编辑器
 .DS_Store
 *.swp
+
+# 内部运行文件（不入公开仓）
+longyi-methodology-pending.md
+.methodology_sync_state.json
