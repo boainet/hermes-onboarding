@@ -99,7 +99,7 @@ def matches(title, guide_text):
     # 用于 methodology 是大条目内嵌子句、skill 是独立详细条目且措辞略异的情况
     # (如 methodology"分层判据" ↔ skill"分层存的判据")。机械匹配难覆盖的变体在这登记。
     ALIASES = {
-        "分层判据": "分层存的判据",
+        "分层判据·写入前分流": "分层存的判据·写入前分流",
         "monitor 类 job 高频 tick": "高频 tick",
         "判断\"变更要不要提炼\"看条目抽象层级不看技能出处": "抽象层级",
     }
