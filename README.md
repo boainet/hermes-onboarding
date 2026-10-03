@@ -1,6 +1,6 @@
 # 让 AI Agent 从"陌生外包"变成"懂你的合伙人"
 
-[![版本](https://img.shields.io/badge/版本-v4.37-2ea44f)]()
+[![版本](https://img.shields.io/badge/版本-v4.38-2ea44f)]()
 [![中文](https://img.shields.io/badge/lang-中文-3aa675)]()
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-开箱即用-5865F2)]()
 [![English](https://img.shields.io/badge/lang-English-5865F2)](README_EN.md)
@@ -42,6 +42,10 @@
 - **版本机制**：统一版本自适应，后续升级喂新版即增量
 
 ## 版本
+
+- v4.38（2026-10-03）｜ 更新日期：2026-10-03
+
+### v4.38 更新说明（本周攒批 8 条方法论聚合发布：验证 2 / 调试 2 / 运维 4，全量明细见 longyi-methodology-skill.md 变更台账 v4.38 行）
 
 - v4.37（2026-09-26）｜ 更新日期：2026-09-26
 
