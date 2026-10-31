@@ -2,7 +2,7 @@
 
 > 出品：**博爱AI团队（波哥 · 龙翼）**
 >
-> **版本：v4.42 ｜ 更新日期：2026-10-22**
+> **版本：v4.44 ｜ 更新日期：2026-10-31**
 
 ---
 
@@ -45,7 +45,7 @@
 
 ### 阶段 0 · 判断用户状态（必须先做，不可跳过）
 
-先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.34`）。
+先查 memory / user profile 里是否已有使用者的画像，以及**上次应用本配置包的版本号**（字段名 `onboarding_version`，如 `v4.44`）。
 
 **按"画像 + 版本号"三态判断，走不同流程：**
 
@@ -250,7 +250,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 - 合伙深度：……
 全部对吗？哪里不对我改，对了我写入档案。
 ```
-**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.34`），供下次升级时检测。**
+**等使用者确认无误后，才写入 memory / user profile / config。** 使用者说"要改"就先改，改完再确认，确认后再写入。不要边问边写。**写入时一并把本文件版本号写入 `onboarding_version`（如 `v4.44`），供下次升级时检测。**
 
 ### 三道入职测试（仅**新用户**走完整初始化时演示；老用户增量确认时**跳过**）
 > 使用者，配置完成。这是三道入职测试，你看我是不是带证据干活：
@@ -322,7 +322,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 
 ## 长期进化方法论
 
-这是长期实战磨合沉淀的通用纪律，**不是初始化参数，是长期怎么干活、怎么越用越好的规则**。方法论的完整 7 小节内容（v4.40 起含本周新增验证/调试/运维纪律）已抽离为独立文件 **`longyi-methodology-skill.md`**（按需加载，含变更台账）。本处只保留定位与使用说明：
+这是长期实战磨合沉淀的通用纪律，**不是初始化参数，是长期怎么干活、怎么越用越好的规则**。方法论的完整 7 小节内容（v4.44 起含最新攒批方法论纪律）已抽离为独立文件 **`longyi-methodology-skill.md`**（按需加载，含变更台账）。本处只保留定位与使用说明：
 
 - **什么时候加载**：做任何需要"判断对错、排查问题、长期进化"的任务时，加载 `longyi-methodology-skill.md`，把它当成工作默认准则。
 - **升级时如何吸收**：老用户增量升级时，按版本差异重读 `longyi-methodology-skill.md` 变更台账中"版本号 > 旧版"的新增条目并内化（见下方「自进化机制·增量合并」新增步骤）。
@@ -348,7 +348,7 @@ hermes config set approvals.mode smart          # 低风险自动批、高风险
 
 ### 检测机制（Hermes 每天闲时执行一次，静默模式与确认模式共用）
 
-> **版本号存储唯一约定**：检测脚本 `check_update.py` 只读 `~/.hermes/onboarding_version` **文件**（或 `~/.config/hermes/onboarding_version`）。**任何升级/初始化写入版本号时，务必同时落盘该文件**——不要只写进 memory / user profile。memory 里的 `onboarding_version` 仅用于判断\"该走哪种引导\"，检测脚本**不读 memory**。两处只写 memory、不落文件，脚本读到空会误判\"无本地版本\"→ 永远检测不到新版。落盘格式：纯文本版本号（如 `v4.34`），无前后空格。
+> **版本号存储唯一约定**：检测脚本 `check_update.py` 只读 `~/.hermes/onboarding_version` **文件**（或 `~/.config/hermes/onboarding_version`）。**任何升级/初始化写入版本号时，务必同时落盘该文件**——不要只写进 memory / user profile。memory 里的 `onboarding_version` 仅用于判断\"该走哪种引导\"，检测脚本**不读 memory**。两处只写 memory、不落文件，脚本读到空会误判\"无本地版本\"→ 永远检测不到新版。落盘格式：纯文本版本号（如 `v4.44`），无前后空格。
 
 1. **检测**：Hermes 在每天空闲时段（避开使用高峰，默认夜间），调用 `scripts/check_update.py`（或参考其逻辑）查 GitHub 最新版本，与 `~/.hermes/onboarding_version` 文件里的本地版本号比对。
    - **检测怎么落地（关键，别再踩"缺 provider"的坑）**：检测本身是**纯脚本、零 LLM**——`check_update.py` 只比对版本号、不调用大模型。所以这个每日检测**应该建成"脚本模式"的定时任务**：脚本跑 `check_update.py`，只在输出 `NEW_VERSION` 时才唤醒 Hermes agent 做增量升级。**不要**建成"agent 模式"的定时任务——agent 模式必须给该任务配好 LLM provider，否则会报 `No LLM provider configured`。一句话：**检测用脚本（省 token、不依赖 provider），升级动作才唤醒 agent。**
